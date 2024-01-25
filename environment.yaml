@@ -1,0 +1,23 @@
+name: FlyAnalysis
+
+channels:
+  - defaults
+  - conda-forge
+
+dependencies:
+  - python
+  - pip
+  - scipy
+  - pandas
+  - numpy
+  - matplotlib
+  - tqdm
+  - natsort
+  - jupyterlab
+  - ipympl
+
+  - pip:
+    - opencv-contrib-python>4
+    - pybind11_rdp
+    - spatialmath-python
+    - decord

@@ -1,0 +1,14 @@
+python
+pip
+scipy
+pandas
+numpy
+matplotlib
+tqdm
+natsort
+jupyterlab
+ipympl
+opencv-contrib-python>4
+pybind11_rdp
+spatialmath-python
+decord
