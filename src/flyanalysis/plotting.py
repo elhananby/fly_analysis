@@ -1,18 +1,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-
-def _calculate_mean_and_std(arr: np.ndarray):
-    """
-    Calculate the mean and standard deviation of an array.
-
-    Parameters:
-        arr (np.ndarray): Input array.
-
-    Returns:
-        tuple: Mean and standard deviation of the array.
-    """
-    return np.mean(arr, axis=0), np.std(arr, axis=0)
+from stats import _calculate_mean_and_std
 
 def plot_trajectory(df: pd.DataFrame, ax: plt.Axes = None, **kwargs):
     """

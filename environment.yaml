@@ -5,16 +5,18 @@ channels:
   - conda-forge
 
 dependencies:
-  - python
+  - python>=3.10
   - pip
   - scipy
   - pandas
   - numpy
-  - matplotlib
   - tqdm
   - natsort
   - jupyterlab
+  - filterpy
   - ipympl
+  - matplotlib
+  - ipywidgets
 
   - pip:
     - opencv-contrib-python>4

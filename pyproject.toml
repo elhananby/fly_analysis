@@ -1,0 +1,11 @@
+[project]
+name = "FlyAnalysis"
+version = "0.1.0"
+description = "Analysis of free-flight data from Braidz"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

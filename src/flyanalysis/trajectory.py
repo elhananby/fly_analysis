@@ -3,7 +3,7 @@ import pandas as pd
 from pybind11_rdp import rdp
 from typing import Union
 from scipy.signal import savgol_filter, find_peaks
-
+from stats import sg_smooth
 
 def time(df: pd.DataFrame) -> float:
     """
@@ -191,20 +191,6 @@ def smooth_columns(
     df_copy = df.copy()
     for col in columns:
         df_copy[f"{col}_raw"] = df[col].copy()
-        df_copy[col] = _sg_smooth(df[col].to_numpy(), **kwargs)
+        df_copy[col] = sg_smooth(df[col].to_numpy(), **kwargs)
 
     return df_copy
-
-
-def _sg_smooth(arr: np.array, **kwargs) -> np.array:
-    """
-    Apply Savitzky-Golay filter to the input array.
-
-    Parameters:
-    arr (np.array): Input array.
-    **kwargs: Keyword arguments for scipy.signal.savgol_filter.
-
-    Returns:
-    np.array: Filtered array.
-    """
-    return savgol_filter(arr, **kwargs)

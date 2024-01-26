@@ -4,6 +4,8 @@ scipy
 pandas
 numpy
 matplotlib
+ipywidgets
+ipympl
 tqdm
 natsort
 jupyterlab
@@ -12,3 +14,4 @@ opencv-contrib-python>4
 pybind11_rdp
 spatialmath-python
 decord
+filterpy
