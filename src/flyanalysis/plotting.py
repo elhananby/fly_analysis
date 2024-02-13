@@ -1,7 +1,8 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-from stats import _calculate_mean_and_std
+from helpers import _calculate_mean_and_std
+
 
 def plot_trajectory(df: pd.DataFrame, ax: plt.Axes = None, **kwargs):
     """
@@ -18,10 +19,11 @@ def plot_trajectory(df: pd.DataFrame, ax: plt.Axes = None, **kwargs):
     if ax is None:
         fig, ax = plt.subplots()
     ax.plot(df.x, df.y, **kwargs)
-    
+
     # plot first point of trajectory
-    ax.plot(df.x.iloc[0], df.y.iloc[0], 'ro')
+    ax.plot(df.x.iloc[0], df.y.iloc[0], "ro")
     return ax
+
 
 def plot_mean_and_std(arr: np.ndarray, ax: plt.Axes = None, **kwargs):
     """
