@@ -2,47 +2,77 @@ import glob
 import os
 import pathlib
 import zipfile
+import pyarrow.csv as pv
+import pyarrow.parquet as pq
+import pyarrow as pa
+import gzip
 
 import pandas as pd
 from tqdm import tqdm
+from typing import Dict, Tuple, Optional, Literal
 
 
-def _read_from_file(filename: str) -> tuple[pd.DataFrame, dict]:
+def read_csv_pyarrow(file_obj) -> Optional[pd.DataFrame]:
+    try:
+        table = pv.read_csv(file_obj, read_options=pv.ReadOptions(skip_rows_after_names=1))
+        return table.to_pandas()
+    except pa.ArrowInvalid:
+        return None
+
+def read_csv_pandas(file_obj) -> Optional[pd.DataFrame]:
+    try:
+        return pd.read_csv(file_obj, comment="#")
+    except pd.errors.EmptyDataError:
+        return None
+
+def _read_from_file(filename: str, parser: Literal["pandas", "pyarrow"] = "pyarrow") -> Tuple[Optional[pd.DataFrame], Dict[str, pd.DataFrame]]:
     """
-    Reads data from a .braidz file.
+    Reads data from a .braidz file using either PyArrow or pandas for CSV parsing.
 
     This function opens a .braidz file, reads the 'kalman_estimates.csv.gz' file into a pandas DataFrame,
     and also reads any other .csv files present in the .braidz file into a dictionary of pandas DataFrames.
 
     Parameters:
     filename (str): The path to the .braidz file.
+    parser (str): The parser to use for reading CSV files. Either "pandas" or "pyarrow". Default is "pyarrow".
 
     Returns:
     tuple: A tuple containing the DataFrame from 'kalman_estimates.csv.gz' and a dictionary of DataFrames from other .csv files.
     """
+    if parser not in ["pandas", "pyarrow"]:
+        raise ValueError("parser must be either 'pandas' or 'pyarrow'")
+
     filepath = pathlib.Path(filename)
+    csv_s: Dict[str, pd.DataFrame] = {}
+
+    read_csv = read_csv_pyarrow if parser == "pyarrow" else read_csv_pandas
+
     with zipfile.ZipFile(file=filepath, mode="r") as archive:
-        print(f"Reading {filename}")
-        # read df from braidz file
+        print(f"Reading {filename} using {parser}")
+
+        # Read kalman_estimates.csv.gz
         try:
-            df = pd.read_csv(
-                archive.open("kalman_estimates.csv.gz"), comment="#", compression="gzip"
-            )
-        except pd.errors.EmptyDataError:
+            with archive.open("kalman_estimates.csv.gz") as file:
+                if parser == "pandas":
+                    df = read_csv(gzip.open(file, 'rt'))
+                else:  # pyarrow
+                    with gzip.open(file, 'rb') as unzipped:
+                        df = read_csv(unzipped)
+            if df is None or df.empty:
+                return None, None
+        except KeyError:
+            print(f"kalman_estimates.csv.gz not found in {filename}")
             return None, None
 
-        # check if any other csv files exist in the braidz file, and load them
-        # this is to handle the opto.csv, stim.csv, or something_else.csv that may
-        # get created during the recording
+        # Read other CSV files
         csv_files = [csv for csv in archive.namelist() if csv.endswith(".csv")]
-
-        csv_s = {}
         for csv_file in csv_files:
             key, _ = os.path.splitext(csv_file)
             try:
                 csv_s[key] = pd.read_csv(archive.open(csv_file))
             except pd.errors.EmptyDataError:
                 continue
+
     return df, csv_s
 
 
