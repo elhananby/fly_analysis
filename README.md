@@ -22,6 +22,7 @@ FlyAnalysis is a comprehensive Python package designed to perform advanced analy
    ```
    git clone https://github.com/elhananby/FlyAnalysis
    ```
+   or just directly download it as a zip file.
 
 2. Change to the repository directory:
    ```
