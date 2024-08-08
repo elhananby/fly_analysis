@@ -1,7 +1,7 @@
 from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
-from helpers import _calculate_mean_and_std
+from .helpers import _calculate_mean_and_std
 
 
 def plot_trajectory(df: pd.DataFrame, ax: plt.Axes = None, **kwargs):

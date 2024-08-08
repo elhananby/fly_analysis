@@ -13,6 +13,19 @@ from typing import Dict, Tuple, Optional, Literal
 
 
 def read_csv_pyarrow(file_obj) -> Optional[pd.DataFrame]:
+    """
+    Read a CSV file using pyarrow and convert it to a pandas DataFrame.
+
+    Args:
+        file_obj (file-like object): The file-like object containing the CSV data.
+
+    Returns:
+        Optional[pd.DataFrame]: The pandas DataFrame containing the CSV data, or None if the file is invalid.
+
+    Raises:
+        pa.ArrowInvalid: If the file is invalid and cannot be read by pyarrow.
+
+    """
     try:
         table = pv.read_csv(file_obj, read_options=pv.ReadOptions(skip_rows_after_names=1))
         return table.to_pandas()
@@ -20,6 +33,18 @@ def read_csv_pyarrow(file_obj) -> Optional[pd.DataFrame]:
         return None
 
 def read_csv_pandas(file_obj) -> Optional[pd.DataFrame]:
+    """
+    Reads a CSV file using pandas and returns a DataFrame.
+
+    Args:
+        file_obj (str or file-like object): The file path or file-like object to read.
+
+    Returns:
+        Optional[pd.DataFrame]: A DataFrame containing the data from the CSV file, or None if the file is empty.
+
+    Raises:
+        pd.errors.EmptyDataError: If the file is empty.
+    """
     try:
         return pd.read_csv(file_obj, comment="#")
     except pd.errors.EmptyDataError:

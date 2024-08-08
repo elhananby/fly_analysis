@@ -1,5 +1,5 @@
 [project]
-name = "FlyAnalysis"
+name = "flyanalysis"
 version = "0.1.0"
 description = "Analysis of free-flight data from Braidz"
 authors = [{ name = "Elhanan Buchsbaum", email = "elhananby@gmail.com" }]

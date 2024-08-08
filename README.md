@@ -2,6 +2,9 @@
 
 This package contains some functions and classes to perform basic analysis on `braid` output data.
 
+I would highly recommend going over the official [**braid documentation**](https://strawlab.github.io/strand-braid/braidz-files.html) for more in-depth information.
+
+You can get an example file for analysis from here: 
 ## Installation
 
 * Clone the repository using:
@@ -10,7 +13,11 @@ This package contains some functions and classes to perform basic analysis on `b
   ```
 * cd into the repo folder and create a **`mamba`** (preferable)/`conda` environment using:
   ```
-  mamba create -f environment.yaml
+  mamba env create -f environment.yaml
+  ```
+  or 
+  ```
+  conda env create -f environment.yaml
   ```
 * Install the flyanalysis package using:
   ```
@@ -20,7 +27,7 @@ This package contains some functions and classes to perform basic analysis on `b
 
 ## Modules
 
-### braidz
+### braidz.py
 
 Contains all the functions required to load a `.braidz` data file.
 ```python

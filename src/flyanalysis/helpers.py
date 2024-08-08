@@ -17,14 +17,16 @@ def _calculate_mean_and_std(arr: np.ndarray):
 
 def sg_smooth(arr: np.array, **kwargs) -> np.array:
     """
-    Apply Savitzky-Golay filter to the input array.
+    Apply Savitzky-Golay smoothing to an array.
 
-    Parameters:
-    arr (np.array): Input array.
-    **kwargs: Keyword arguments for scipy.signal.savgol_filter.
+    Args:
+        arr (np.array): The input array to be smoothed.
+        **kwargs: Additional keyword arguments to be passed to the `savgol_filter` function.
 
     Returns:
-    np.array: Filtered array.
+        np.array: The smoothed array.
+
+    This function uses the `savgol_filter` function from the `scipy.signal` module to apply Savitzky-Golay smoothing to the input array. The smoothing parameters are specified using the `**kwargs` parameter. The resulting smoothed array is returned.
     """
     return savgol_filter(arr, **kwargs)
 
