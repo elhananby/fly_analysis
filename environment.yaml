@@ -1,4 +1,4 @@
-name: FlyAnalysis
+name: flyanalysis-env
 
 channels:
   - defaults

@@ -30,6 +30,16 @@ def sg_smooth(arr: np.array, **kwargs) -> np.array:
 
 
 def process_sequences(arr: np.ndarray, func):
+    """
+    Process sequences in a given array by applying a function to each non-NaN sequence.
+
+    Parameters:
+        arr (np.ndarray): The input array containing sequences.
+        func (function): The function to apply to each non-NaN sequence.
+
+    Returns:
+        np.ndarray: The processed array with the function applied to each non-NaN sequence.
+    """
     nan_indices = np.isnan(arr)
     non_nan_sequences = np.ma.clump_unmasked(np.ma.masked_array(arr, nan_indices))
 
@@ -42,6 +52,17 @@ def process_sequences(arr: np.ndarray, func):
 
 
 def unwrap_with_nan(arr, placeholder=0):
+    """
+    Replaces NaN values in the input array with a specified placeholder value, unwraps the array using np.unwrap(),
+    and then replaces the placeholder values with NaN again.
+
+    Parameters:
+        arr (np.ndarray): The input array.
+        placeholder (int, optional): The value to replace NaN values with. Defaults to 0.
+
+    Returns:
+        np.ndarray: The unwrapped array with NaN values replaced by the placeholder value.
+    """
     # Replace NaN values with a placeholder
     arr_no_nan = np.where(np.isnan(arr), placeholder, arr)
 
