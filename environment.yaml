@@ -5,7 +5,7 @@ channels:
   - conda-forge
 
 dependencies:
-  - python
+  - python<=3.11
   - pip
   - scipy
   - pandas
@@ -29,4 +29,6 @@ dependencies:
     - opencv-contrib-python>4
     - pybind11_rdp
     - decord
+    - pycircstat
+    - nose
 

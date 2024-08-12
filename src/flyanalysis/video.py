@@ -43,6 +43,18 @@ def find_contours(frame: np.ndarray):
     return cv2.findContours(frame, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
 
 
+def get_largest_contour(contours: np.ndarray):
+    """
+    Get the largest contour in a list of contours.
+
+    Parameters:
+        contours (np.ndarray): Contours.
+
+    Returns:
+        np.ndarray: Largest contour.
+    """
+    return max(contours, key=cv2.contourArea)
+
 def get_contour_parameters(contour: np.ndarray):
     """
     Get parameters of a contour.
@@ -57,6 +69,11 @@ def get_contour_parameters(contour: np.ndarray):
         ellipse: Ellipse of the contour.
     """
     M = cv2.moments(contour)
+    
+    # calculate x,y coordinate of center
+    if M["m00"] == 0:
+        return (0, 0), 0, 0, (0, 0, 0)
+    
     centroid = (
         int(M["m10"] / M["m00"]),
         int(M["m01"] / M["m00"]),
