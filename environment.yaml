@@ -27,8 +27,6 @@ dependencies:
 
   - pip:
     - opencv-contrib-python>4
-    - pybind11_rdp
-    - decord
     - pycircstat
     - nose
 

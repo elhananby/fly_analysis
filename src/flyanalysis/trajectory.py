@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from pybind11_rdp import rdp
+#from pybind11_rdp import rdp
 from typing import Union
 from scipy.signal import savgol_filter, find_peaks
 from .helpers import sg_smooth
@@ -144,21 +144,21 @@ def get_turn_angle(
     return angles
 
 
-def get_simplified_trajectory(df: pd.DataFrame, epsilon: float = 0.001) -> np.ndarray:
-    """
-    Simplify the trajectory using Ramer-Douglas-Peucker algorithm.
+# def get_simplified_trajectory(df: pd.DataFrame, epsilon: float = 0.001) -> np.ndarray:
+#     """
+#     Simplify the trajectory using Ramer-Douglas-Peucker algorithm.
 
-    Parameters:
-        df (pd.DataFrame): Input dataframe with 'x' and 'y' columns.
-        epsilon (float): The maximum permissible deviation from the line.
-            Points with greater deviation will be included in the output.
+#     Parameters:
+#         df (pd.DataFrame): Input dataframe with 'x' and 'y' columns.
+#         epsilon (float): The maximum permissible deviation from the line.
+#             Points with greater deviation will be included in the output.
 
-    Returns:
-        np.array: Indices of the simplified trajectory.
-    """
-    pos = df.loc[:, ["x", "y"]].to_numpy()
-    simplified = rdp(pos, epsilon=epsilon, return_mask=True)
-    return np.where(simplified)[0]
+#     Returns:
+#         np.array: Indices of the simplified trajectory.
+#     """
+#     pos = df.loc[:, ["x", "y"]].to_numpy()
+#     simplified = rdp(pos, epsilon=epsilon, return_mask=True)
+#     return np.where(simplified)[0]
 
 
 def heading_direction_diff(

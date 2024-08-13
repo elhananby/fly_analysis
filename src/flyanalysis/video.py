@@ -1,4 +1,3 @@
-from decord import VideoReader
 import cv2
 import numpy as np
 
@@ -84,20 +83,6 @@ def get_contour_parameters(contour: np.ndarray):
     return centroid, area, perimeter, ellipse
 
 
-def read_frame(video_reader: VideoReader, frame_num: int):
-    """
-    Read a frame from a video.
-
-    Parameters:
-        video_reader (decord.VideoReader): Video reader object.
-        frame_num (int): Frame number to read.
-
-    Returns:
-        np.ndarray: Frame.
-    """
-    return video_reader[frame_num].asnumpy()
-
-
 def read_video(filename: str):
     """
     Read a video.
@@ -108,7 +93,11 @@ def read_video(filename: str):
     Returns:
         Iterator[np.ndarray]: Iterator of frames.
     """
-    video_reader = VideoReader(filename)
+    video_reader = cv2.VideoCapture(filename)
 
-    for frame_num in range(len(video_reader)):
-        yield read_frame(video_reader, frame_num)
+    while video_reader.isOpened():
+        ret, frame = video_reader.read()
+        if ret:
+            yield frame
+        else:
+            break
