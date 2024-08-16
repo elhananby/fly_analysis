@@ -75,3 +75,41 @@ def unwrap_with_nan(arr, placeholder=0):
     unwrapped_arr = np.where(unwrapped_arr == placeholder, np.nan, unwrapped_arr)
 
     return unwrapped_arr
+
+
+def circular_median(angles, degrees=False):
+    """
+    Calculate the circular median of a set of angles.
+
+    Parameters:
+    angles (array-like): An array of angles.
+    degrees (bool): If True, angles are in degrees. If False, angles are in radians.
+
+    Returns:
+    float: The circular median angle in the same units as the input.
+    """
+    if degrees:
+        angles = np.deg2rad(angles)
+
+    # Convert angles to unit vectors
+    x = np.cos(angles)
+    y = np.sin(angles)
+
+    # Calculate the mean of the vectors
+    mean_x = np.mean(x)
+    mean_y = np.mean(y)
+
+    # Convert mean vector back to angle
+    median_angle = np.arctan2(mean_y, mean_x)
+
+    if degrees:
+        median_angle = np.rad2deg(median_angle)
+        # Ensure the result is in the range [0, 360)
+        return (median_angle + 360) % 360
+    else:
+        # Ensure the result is in the range [0, 2π)
+        return (median_angle + 2 * np.pi) % (2 * np.pi)
+
+
+def angdiff(theta1, theta2):
+    return ((theta2 - theta1) + np.pi) % (2 * np.pi) - np.pi

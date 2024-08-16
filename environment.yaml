@@ -29,4 +29,4 @@ dependencies:
     - opencv-contrib-python>4
     - pycircstat
     - nose
-
+    - pybraidz_chunked_iter

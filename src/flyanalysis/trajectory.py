@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
-#from pybind11_rdp import rdp
+
+# from pybind11_rdp import rdp
 from typing import Union
-from scipy.signal import savgol_filter, find_peaks
-from .helpers import sg_smooth
-import os
-import zipfile
+from scipy.signal import find_peaks
+from .helpers import sg_smooth, circular_median, angdiff
+
 
 def time(df: pd.DataFrame) -> float:
     """
@@ -208,3 +208,59 @@ def smooth_columns(
         df_copy[col] = sg_smooth(df[col].to_numpy(), **kwargs)
 
     return df_copy
+
+
+def mGSD(trajectory, delta=5, threshold=0.001):
+    """
+    Modified Geometric Saccade Detection Algorithm
+
+    Parameters:
+    trajectory: numpy array of shape (n, 2) where n is the number of frames
+                and each row is [x, y] position
+    delta: time step in frames (default 5, which is 50ms at 100Hz)
+    threshold: threshold for saccade detection (default 0.001)
+
+    Returns:
+    saccades: list of frame indices where saccades were detected
+    """
+
+    n = len(trajectory)
+    scores = np.zeros(n)
+
+    for k in range(delta, n - delta):
+        # Redefine coordinate system
+        centered = trajectory - trajectory[k]
+
+        # Calculate angles for before and after intervals
+        before = centered[k - delta : k]
+        after = centered[k + 1 : k + delta + 1]
+
+        theta_before = circular_median(np.arctan2(before[:, 1], before[:, 0]))
+        theta_after = circular_median(np.arctan2(after[:, 1], after[:, 0]))
+
+        # Calculate amplitude score
+        A = np.abs(angdiff(theta_after, theta_before))
+
+        # Calculate dispersion score
+        window = centered[k - delta : k + delta + 1]
+        D = np.std(np.sqrt(window[:, 0] ** 2 + window[:, 1] ** 2))
+
+        # Calculate mGSD score
+        scores[k] = A * D
+
+    # Detect saccades
+    above_threshold = scores > threshold
+    saccades = []
+    in_saccade = False
+    start = 0
+
+    for i in range(len(above_threshold)):
+        if above_threshold[i] and not in_saccade:
+            in_saccade = True
+            start = i
+        elif not above_threshold[i] and in_saccade:
+            if i - start > 5:  # Only count as saccade if it lasts more than 5 frames
+                saccades.append(start + (i - start) // 2)  # Median position
+            in_saccade = False
+
+    return saccades

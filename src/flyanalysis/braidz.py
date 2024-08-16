@@ -3,10 +3,8 @@ import os
 import pathlib
 import zipfile
 import pyarrow.csv as pv
-import pyarrow.parquet as pq
 import pyarrow as pa
 import gzip
-
 import pandas as pd
 from tqdm import tqdm
 from typing import Dict, Tuple, Optional, Literal
@@ -27,10 +25,13 @@ def read_csv_pyarrow(file_obj) -> Optional[pd.DataFrame]:
 
     """
     try:
-        table = pv.read_csv(file_obj, read_options=pv.ReadOptions(skip_rows_after_names=1))
+        table = pv.read_csv(
+            file_obj, read_options=pv.ReadOptions(skip_rows_after_names=1)
+        )
         return table.to_pandas()
     except pa.ArrowInvalid:
         return None
+
 
 def read_csv_pandas(file_obj) -> Optional[pd.DataFrame]:
     """
@@ -50,7 +51,10 @@ def read_csv_pandas(file_obj) -> Optional[pd.DataFrame]:
     except pd.errors.EmptyDataError:
         return None
 
-def _read_from_file(filename: str, parser: Literal["pandas", "pyarrow"] = "pyarrow") -> Tuple[Optional[pd.DataFrame], Dict[str, pd.DataFrame]]:
+
+def _read_from_file(
+    filename: str, parser: Literal["pandas", "pyarrow"] = "pyarrow"
+) -> Tuple[Optional[pd.DataFrame], Dict[str, pd.DataFrame]]:
     """
     Reads data from a .braidz file using either PyArrow or pandas for CSV parsing.
 
@@ -79,9 +83,9 @@ def _read_from_file(filename: str, parser: Literal["pandas", "pyarrow"] = "pyarr
         try:
             with archive.open("kalman_estimates.csv.gz") as file:
                 if parser == "pandas":
-                    df = read_csv(gzip.open(file, 'rt'))
+                    df = read_csv(gzip.open(file, "rt"))
                 else:  # pyarrow
-                    with gzip.open(file, 'rb') as unzipped:
+                    with gzip.open(file, "rb") as unzipped:
                         df = read_csv(unzipped)
             if df is None or df.empty:
                 return None, None

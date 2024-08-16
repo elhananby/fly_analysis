@@ -3,7 +3,8 @@ import numpy as np
 import pandas as pd
 from .helpers import _calculate_mean_and_std
 from matplotlib import colormaps
-from typing import List, Tuple
+from typing import List
+
 
 def plot_trajectory(df: pd.DataFrame, ax: plt.Axes = None, **kwargs):
     """
@@ -46,6 +47,7 @@ def plot_mean_and_std(arr: np.ndarray, ax: plt.Axes = None, **kwargs):
     ax.fill_between(X, mean - std, mean + std, alpha=0.5)
     return ax
 
+
 def plot_dispersions(groups: List[List[np.array]], labels: List[str], ax=None):
     """
     Plots the XY parts of trajectories for multiple groups in a 2D plot.
@@ -57,7 +59,7 @@ def plot_dispersions(groups: List[List[np.array]], labels: List[str], ax=None):
     """
     if len(groups) != len(labels):
         raise ValueError("Number of groups must match the number of labels.")
-    
+
     if ax is None:
         ax = plt.gca()
 
@@ -68,13 +70,19 @@ def plot_dispersions(groups: List[List[np.array]], labels: List[str], ax=None):
     for i, group in enumerate(groups):
         for traj in group:
             ax.plot(traj[:, 0], traj[:, 1], color=colors(i), alpha=0.5)
-        
+
         # Calculate and plot the mean trajectory for the group
         mean_traj = np.mean(np.stack(group), axis=0)
-        ax.plot(mean_traj[:, 0], mean_traj[:, 1], color=colors(i), linewidth=3, label=labels[i])
+        ax.plot(
+            mean_traj[:, 0],
+            mean_traj[:, 1],
+            color=colors(i),
+            linewidth=3,
+            label=labels[i],
+        )
 
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_title('Trajectory Dispersion Comparison')
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_title("Trajectory Dispersion Comparison")
     ax.legend()
     ax.grid(True)
