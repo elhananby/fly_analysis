@@ -1,58 +1,51 @@
 import pandas as pd
 import numpy as np
 from typing import List, Tuple, Callable
-from .braidz import read_braidz
 
 
 def filter_by_distance(df: pd.DataFrame, threshold: float = 0.5) -> List[int]:
     """
-    Calculate the total distance traveled by each object in the DataFrame grouped by 'obj_id'.
+    Filters objects in a DataFrame based on the total distance traveled.
 
     Parameters:
-        df (pd.DataFrame): The input DataFrame containing the positional data of objects.
-        threshold (float, optional): The minimum distance threshold to filter objects. Defaults to 0.5.
+    df (pd.DataFrame): The DataFrame containing the object data.
+    threshold (float, optional): The minimum distance required for an object to be included. Defaults to 0.5.
 
     Returns:
-        List[int]: A list of object IDs that have a total distance greater than the threshold.
+    List[int]: A list of object IDs that meet the distance threshold.
     """
-    # Convert DataFrame to NumPy array for faster operations
-    coords = df[["x", "y", "z"]].values
+    def _distance(grp: pd.DataFrame) -> float:
+        dist = np.linalg.norm(grp[['x', 'y', 'z']].diff().values, axis=1).sum()
+        return dist
+    
+    good_obj_ids = []
 
-    # Calculate differences between consecutive points
-    diffs = np.diff(coords, axis=0)
+    for obj_id, grp in df.groupby("obj_id"):
+        dist = _distance(grp)
+        if dist > threshold:
+            good_obj_ids.append(obj_id)
 
-    # Calculate distances (Euclidean norm) for each group
-    distances = np.sqrt(np.sum(diffs**2, axis=1))
-
-    # Group distances by object ID and sum them
-    total_distances = df.groupby("obj_id").apply(
-        lambda x: np.sum(distances[x.index[:-1]])
-    )
-
-    # Filter object IDs where total distance exceeds the threshold
-    obj_ids = total_distances[total_distances > threshold].index.tolist()
-
-    return obj_ids
+    return good_obj_ids
 
 
 def filter_by_duration(df: pd.DataFrame, threshold: float = 5) -> List[int]:
     """
-    Calculate the duration of each object's activity based on timestamp data in the DataFrame grouped by 'obj_id'.
+    Filters objects in a DataFrame based on the duration of activity.
 
     Parameters:
-        df (pd.DataFrame): The input DataFrame containing timestamp data of objects.
-        threshold (float, optional): The minimum duration threshold to filter objects. Defaults to 10.
+    df (pd.DataFrame): The DataFrame containing the object data.
+    threshold (float, optional): The minimum duration required for an object to be included. Defaults to 5.
 
     Returns:
-        List[int]: A list of object IDs that have a duration greater than the threshold.
+    List[int]: A list of object IDs that meet the duration threshold.
     """
-    obj_ids = []
+    good_obj_ids = []
     # durations = df.groupby("obj_id")['timestamp'].apply(lambda x: x.max() - x.min())
     for obj_id, grp in df.groupby("obj_id"):
         durations = grp["timestamp"].max() - grp["timestamp"].min()
         if durations > threshold:
-            obj_ids.append(obj_id)
-    return obj_ids
+            good_obj_ids.append(obj_id)
+    return good_obj_ids
 
 
 def filter_by_median_position(
@@ -73,7 +66,7 @@ def filter_by_median_position(
     Returns:
         List[int]: A list of object IDs that satisfy the filter conditions.
     """
-    obj_ids = []
+    good_obj_ids = []
     for obj_id, grp in df.groupby("obj_id"):
         mx, my, mz = grp["x"].median(), grp["y"].median(), grp["z"].median()
         if (
@@ -81,9 +74,9 @@ def filter_by_median_position(
             and ylim[0] <= my <= ylim[1]
             and zlim[0] <= mz <= zlim[1]
         ):
-            obj_ids.append(obj_id)
+            good_obj_ids.append(obj_id)
 
-    return obj_ids
+    return good_obj_ids
 
 
 def filter_by_velocity(df: pd.DataFrame, threshold: float = 1.0) -> List[int]:
@@ -97,16 +90,19 @@ def filter_by_velocity(df: pd.DataFrame, threshold: float = 1.0) -> List[int]:
     Returns:
         List[int]: A list of object IDs that have an average velocity greater than the threshold.
     """
+    good_obj_ids = []
 
-    def avg_velocity(group):
-        time_diff = group["timestamp"].diff()
-        dist = np.sqrt(
-            group["x"].diff() ** 2 + group["y"].diff() ** 2 + group["z"].diff() ** 2
+    for obj_id, grp in df.groupby("obj_id"):
+        linear_velocity = np.sqrt(
+            grp["xvel"].to_numpy() ** 2
+            + grp["yvel"].to_numpy() ** 2
+            + grp["zvel"].to_numpy() ** 2
         )
-        return (dist / time_diff).mean()
 
-    velocities = df.groupby("obj_id").apply(avg_velocity)
-    return velocities[velocities > threshold].index.tolist()
+        if np.mean(linear_velocity) > threshold:
+            good_obj_ids.append(obj_id)
+
+    return good_obj_ids
 
 
 def filter_by_acceleration(df: pd.DataFrame, threshold: float = 0.5) -> List[int]:
@@ -120,44 +116,18 @@ def filter_by_acceleration(df: pd.DataFrame, threshold: float = 0.5) -> List[int
     Returns:
         List[int]: A list of object IDs that have an average acceleration greater than the threshold.
     """
+    good_obj_ids = []
 
-    def avg_acceleration(group):
-        time_diff = group["timestamp"].diff()
-        velocity = (
-            np.sqrt(
-                group["x"].diff() ** 2 + group["y"].diff() ** 2 + group["z"].diff() ** 2
-            )
-            / time_diff
-        )
-        return velocity.diff().mean()
+    for obj_id, grp in df.groupby("obj_id"):
+        xacc = np.diff(grp["xvel"].to_numpy())
+        yacc = np.diff(grp["yvel"].to_numpy())
+        zacc = np.diff(grp["zvel"].to_numpy())
+        linear_acceleration = np.sqrt(xacc**2 + yacc**2 + zacc**2)
 
-    accelerations = df.groupby("obj_id").apply(avg_acceleration)
-    return accelerations[accelerations > threshold].index.tolist()
+        if np.mean(linear_acceleration) > threshold:
+            good_obj_ids.append(obj_id)
+    return good_obj_ids
 
-
-def filter_by_direction_changes(df: pd.DataFrame, threshold: int = 3) -> List[int]:
-    """
-    Filters a DataFrame based on the number of direction changes for each object.
-
-    Args:
-        df (pd.DataFrame): The DataFrame to filter. It should have columns 'x', 'y', and 'z', representing the coordinates of the objects.
-        threshold (int, optional): The minimum number of direction changes required to keep an object. Defaults to 3.
-
-    Returns:
-        List[int]: A list of object IDs that have more than the threshold number of direction changes.
-
-    This function calculates the direction change for each object in the DataFrame by calculating the difference in 'x', 'y', and 'z' coordinates between consecutive rows. It then calculates the absolute difference in direction between consecutive rows and counts the number of times the absolute difference exceeds pi/4. Finally, it filters the DataFrame based on the number of direction changes and returns a list of object IDs that satisfy the filter condition.
-    """
-
-    def count_direction_changes(group):
-        dx = group["x"].diff()
-        dy = group["y"].diff()
-        dz = group["z"].diff()
-        direction = np.arctan2(np.sqrt(dx**2 + dy**2), dz)
-        return (direction.diff().abs() > np.pi / 4).sum()
-
-    direction_changes = df.groupby("obj_id").apply(count_direction_changes)
-    return direction_changes[direction_changes > threshold].index.tolist()
 
 
 def apply_filters(
@@ -181,79 +151,3 @@ def apply_filters(
     good_obj_ids = list(filtered_ids)
     filtered_df = df[df["obj_id"].isin(good_obj_ids)]
     return filtered_df, good_obj_ids
-
-
-if __name__ == "__main__":
-    df, csvs = read_braidz("20230906_155507.braidz")
-
-    # Assume df is already loaded
-    print("Original DataFrame shape:", df.shape)
-    print("Number of unique objects:", df["obj_id"].nunique())
-
-    # Example of using each filter separately
-    print("\nUsing filters separately:")
-
-    distance_filtered = filter_by_distance(df, threshold=0.5)
-    print(f"Objects passing distance filter: {len(distance_filtered)}")
-
-    duration_filtered = filter_by_duration(df, threshold=10)
-    print(f"Objects passing duration filter: {len(duration_filtered)}")
-
-    position_filtered = filter_by_median_position(
-        df, xlim=(0, 10), ylim=(0, 10), zlim=(0, 10)
-    )
-    print(f"Objects passing median position filter: {len(position_filtered)}")
-
-    velocity_filtered = filter_by_velocity(df, threshold=1.0)
-    print(f"Objects passing velocity filter: {len(velocity_filtered)}")
-
-    acceleration_filtered = filter_by_acceleration(df, threshold=0.5)
-    print(f"Objects passing acceleration filter: {len(acceleration_filtered)}")
-
-    direction_filtered = filter_by_direction_changes(df, threshold=3)
-    print(f"Objects passing direction changes filter: {len(direction_filtered)}")
-
-    # Example of using apply_filters to combine multiple filters
-    print("\nUsing apply_filters to combine multiple filters:")
-
-    filtered_df, good_obj_ids = apply_filters(
-        df,
-        [
-            filter_by_distance,
-            filter_by_duration,
-            filter_by_median_position,
-            filter_by_velocity,
-        ],
-        [0.5],  # args for filter_by_distance
-        [10],  # args for filter_by_duration
-        [(0, 10), (0, 10), (0, 10)],  # args for filter_by_median_position
-        [1.0],  # args for filter_by_velocity
-    )
-
-    print(f"Number of objects that passed all filters: {len(good_obj_ids)}")
-    print(f"Shape of filtered DataFrame: {filtered_df.shape}")
-    print(
-        "Object IDs that passed all filters:",
-        good_obj_ids[:10],
-        "..." if len(good_obj_ids) > 10 else "",
-    )
-
-    # Example of chaining filters manually
-    print("\nChaining filters manually:")
-
-    manual_filtered_ids = set(df["obj_id"].unique())
-    manual_filtered_ids &= set(filter_by_distance(df, 0.5))
-    manual_filtered_ids &= set(filter_by_duration(df, 10))
-    manual_filtered_ids &= set(filter_by_median_position(df, (0, 10), (0, 10), (0, 10)))
-    manual_filtered_ids &= set(filter_by_velocity(df, 1.0))
-
-    manual_filtered_df = df[df["obj_id"].isin(manual_filtered_ids)]
-
-    print(f"Number of objects after manual filtering: {len(manual_filtered_ids)}")
-    print(f"Shape of manually filtered DataFrame: {manual_filtered_df.shape}")
-
-    # Verify that manual filtering and apply_filters give the same result
-    assert (
-        set(good_obj_ids) == manual_filtered_ids
-    ), "Manual filtering and apply_filters give different results"
-    print("Manual filtering and apply_filters give the same result.")

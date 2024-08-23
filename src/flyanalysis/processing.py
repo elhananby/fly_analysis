@@ -87,46 +87,26 @@ def extract_stimulus_centered_data(
         idx_before = stim_idx - n_before
         idx_after = stim_idx + n_after
 
-        # Calculate overflow and adjust indices
-        before_overflow = max(0, -idx_before)
-        after_overflow = max(0, idx_after - len(grp) + 1)
-
-        # Check if overflow exceeds padding
-        if (padding is not None) and (
-            before_overflow > padding or after_overflow > padding
-        ):
+        if idx_before < 0 or idx_after >= len(grp):
             continue
-
-        # Adjust indices to within valid range
-        valid_idx_before = max(0, idx_before)
-        valid_idx_after = min(len(grp), idx_after + 1)
 
         # Get data and apply padding if necessary
         for col in columns:
             if col == "angular_velocity":
                 angvel = trajectory.get_angular_velocity(grp, degrees=False)
-                segment = angvel[valid_idx_before:valid_idx_after]
-                padded_segment = get_segment_with_padding(
-                    segment, before_overflow, after_overflow
-                )
-                data_dict[col].append(padded_segment)
+                segment = angvel[idx_before:idx_after]
+                data_dict[col].append(segment)
 
             elif col == "linear_velocity":
                 linvel = trajectory.get_linear_velocity(grp)
-                segment = linvel[valid_idx_before:valid_idx_after]
-                padded_segment = get_segment_with_padding(
-                    segment, before_overflow, after_overflow
-                )
-                data_dict[col].append(padded_segment)
+                segment = linvel[idx_before:idx_after]
+                data_dict[col].append(segment)
 
             elif col == "position":
                 position_segment = (
-                    grp[["x", "y", "z"]].iloc[valid_idx_before:valid_idx_after].values
+                    grp[["x", "y", "z"]].iloc[idx_before:idx_after].values
                 )
-                padded_segment = get_segment_with_padding(
-                    position_segment, before_overflow, after_overflow, is_2d=True
-                )
-                data_dict[col].append(padded_segment)
+                data_dict[col].append(position_segment)
 
             else:
                 print(f"Column {col} not found")

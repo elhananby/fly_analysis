@@ -5,7 +5,7 @@ channels:
   - conda-forge
 
 dependencies:
-  - python<=3.11
+  - python
   - pip
   - scipy
   - pandas
@@ -16,17 +16,6 @@ dependencies:
   - filterpy
   - ipympl
   - matplotlib
-  - ipywidgets
-  - sphinx
-  - sphinx-rtd-theme
-  - sphinx-autodoc-typehints
-  - joblib
   - seaborn
   - pyarrow
   - spatialmath-python
-
-  - pip:
-    - opencv-contrib-python>4
-    - pycircstat
-    - nose
-    - pybraidz_chunked_iter
