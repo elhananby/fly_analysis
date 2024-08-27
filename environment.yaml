@@ -1,21 +1,18 @@
 name: flyanalysis-env
-
 channels:
-  - defaults
   - conda-forge
-
+  - defaults
 dependencies:
   - python
-  - pip
-  - scipy
-  - pandas
   - numpy
-  - tqdm
-  - natsort
-  - jupyterlab
-  - filterpy
-  - ipympl
+  - pandas
   - matplotlib
-  - seaborn
+  - scipy
+  - opencv
   - pyarrow
+  - tqdm
+  - ipython
+  - jupyter
+  - pip
+  - pybind11
   - spatialmath-python

@@ -61,11 +61,9 @@ fly_analysis/
 To clone the repository, open a terminal and run the following command:
 
 ```bash
-git clone https://github.com/your-username/fly_analysis.git
+git clone https://github.com/elhananby/fly_analysis
 cd fly_analysis
 ```
-
-Replace `your-username` with the actual GitHub username or organization name where the repository is hosted.
 
 ### Creating the Environment
 
@@ -82,7 +80,7 @@ conda env create -f environment.yaml
 4. Activate the environment:
 
 ```bash
-conda activate fly_analysis
+conda activate flyanalysis-env
 ```
 
 ### Installing the Package
