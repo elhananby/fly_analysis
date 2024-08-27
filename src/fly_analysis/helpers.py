@@ -111,5 +111,36 @@ def circular_median(angles, degrees=False):
         return (median_angle + 2 * np.pi) % (2 * np.pi)
 
 
+def find_intersection(*lists: list) -> list:
+    """
+    Find the intersection of any number of lists.
+
+    Args:
+    *lists: Variable number of lists to find the intersection of.
+
+    Returns:
+    List[T]: A list containing elements that appear in all input lists.
+
+    Raises:
+    ValueError: If no lists are provided.
+
+    Example:
+    >>> find_intersection([1, 2, 3], [2, 3, 4], [3, 4, 5])
+    [3]
+    >>> find_intersection(['a', 'b', 'c'], ['b', 'c', 'd'], ['c', 'd', 'e'])
+    ['c']
+    """
+    if not lists:
+        raise ValueError("At least one list must be provided")
+
+    # Convert all lists to sets
+    set_list = [set(lst) for lst in lists]
+
+    # Use set intersection
+    intersection = set.intersection(*set_list)
+
+    # Convert back to list and return
+    return list(intersection)
+
 def angdiff(theta1, theta2):
     return ((theta2 - theta1) + np.pi) % (2 * np.pi) - np.pi

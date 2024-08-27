@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from flyanalysis import trajectory
+from .trajectory import get_angular_velocity, get_linear_velocity
 
 
 def extract_stimulus_centered_data(
@@ -93,12 +93,12 @@ def extract_stimulus_centered_data(
         # Get data and apply padding if necessary
         for col in columns:
             if col == "angular_velocity":
-                angvel = trajectory.get_angular_velocity(grp, degrees=False)
+                angvel = get_angular_velocity(grp, degrees=False)
                 segment = angvel[idx_before:idx_after]
                 data_dict[col].append(segment)
 
             elif col == "linear_velocity":
-                linvel = trajectory.get_linear_velocity(grp)
+                linvel = get_linear_velocity(grp)
                 segment = linvel[idx_before:idx_after]
                 data_dict[col].append(segment)
 

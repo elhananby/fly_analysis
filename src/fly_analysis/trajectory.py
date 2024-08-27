@@ -5,7 +5,7 @@ import pandas as pd
 from typing import Union
 from scipy.signal import find_peaks
 from .helpers import sg_smooth, circular_median, angdiff
-
+from scipy.signal import savgol_filter
 
 def time(df: pd.DataFrame) -> float:
     """
@@ -57,7 +57,7 @@ def get_angular_velocity(
     """
     thetas = np.arctan2(df.yvel.values, df.xvel.values)
     thetas_u = np.unwrap(thetas)
-    angular_velocity = np.gradient(thetas_u) / (1 * dt)
+    angular_velocity = np.gradient(thetas_u, dt)
     return np.rad2deg(angular_velocity) if degrees else angular_velocity
 
 
@@ -98,7 +98,7 @@ def detect_saccades(
     neg_sac_idx, _ = find_peaks(-angvel, height=height, distance=distance)
     pos_sac_idx, _ = find_peaks(angvel, height=height, distance=distance)
 
-    return np.concatenate((neg_sac_idx, pos_sac_idx))
+    return np.concatenate((neg_sac_idx, pos_sac_idx)), angvel
 
 
 def get_turn_angle(
@@ -143,23 +143,105 @@ def get_turn_angle(
 
     return angles
 
+def extract_flying_sections(df, z_min=0.05, z_max=0.25, r_max=0.23, min_flight_duration=50):
+    """
+    Extracts sections of the trajectory where the fly is flying.
+    
+    Args:
+    df (pd.DataFrame): DataFrame containing trajectory data for a single obj_id.
+    z_min (float): Minimum z-coordinate to be considered flying (default: 0.05).
+    z_max (float): Maximum z-coordinate to be considered flying (default: 0.3).
+    r_max (float): Maximum radius to be considered inside the arena (default: 0.24).
+    min_flight_duration (int): Minimum number of consecutive frames to be considered a flight (default: 10).
+    
+    Returns:
+    list: List of DataFrames, each containing a section of flight.
+    """
+    # Calculate radius
+    df['r'] = np.sqrt(df['x']**2 + df['y']**2)
+    
+    # Create a boolean mask for flying conditions
+    flying_mask = (df['z'] > z_min) & (df['z'] < z_max) & (df['r'] < r_max)
+    
+    # Find the start and end indices of flying sections
+    flying_changes = flying_mask.astype(int).diff()
+    flight_starts = df.index[flying_changes == 1].tolist()
+    flight_ends = df.index[flying_changes == -1].tolist()
+    
+    # Handle edge cases
+    if flying_mask.iloc[0]:
+        flight_starts.insert(0, df.index[0])
+    if flying_mask.iloc[-1]:
+        flight_ends.append(df.index[-1])
+    
+    # Extract flying sections
+    flying_sections = []
+    for start, end in zip(flight_starts, flight_ends):
+        section = df.loc[start:end]
+        if len(section) >= min_flight_duration:
+            flying_sections.append(section)
+    
+    return flying_sections
 
-# def get_simplified_trajectory(df: pd.DataFrame, epsilon: float = 0.001) -> np.ndarray:
-#     """
-#     Simplify the trajectory using Ramer-Douglas-Peucker algorithm.
-
-#     Parameters:
-#         df (pd.DataFrame): Input dataframe with 'x' and 'y' columns.
-#         epsilon (float): The maximum permissible deviation from the line.
-#             Points with greater deviation will be included in the output.
-
-#     Returns:
-#         np.array: Indices of the simplified trajectory.
-#     """
-#     pos = df.loc[:, ["x", "y"]].to_numpy()
-#     simplified = rdp(pos, epsilon=epsilon, return_mask=True)
-#     return np.where(simplified)[0]
-
+def advanced_trajectory_filter(df, max_velocity=1.0, max_acceleration=20.0, max_angle_change=np.pi/2, window_size=5):
+    """
+    Apply advanced filtering to remove unrealistic movements from fly trajectories.
+    
+    Args:
+    df (pd.DataFrame): DataFrame containing trajectory data for a single obj_id.
+    max_velocity (float): Maximum allowed velocity in m/s.
+    max_acceleration (float): Maximum allowed acceleration in m/s^2.
+    max_angle_change (float): Maximum allowed angle change in radians.
+    window_size (int): Window size for Savitzky-Golay filter.
+    
+    Returns:
+    pd.DataFrame: Filtered DataFrame with unrealistic movements removed.
+    """
+    # Calculate time step
+    df['dt'] = df['timestamp'].diff()
+    
+    # Calculate velocity
+    df['vx'] = df['x'].diff() / df['dt']
+    df['vy'] = df['y'].diff() / df['dt']
+    df['vz'] = df['z'].diff() / df['dt']
+    df['velocity'] = np.sqrt(df['vx']**2 + df['vy']**2 + df['vz']**2)
+    
+    # Calculate acceleration
+    df['ax'] = df['vx'].diff() / df['dt']
+    df['ay'] = df['vy'].diff() / df['dt']
+    df['az'] = df['vz'].diff() / df['dt']
+    df['acceleration'] = np.sqrt(df['ax']**2 + df['ay']**2 + df['az']**2)
+    
+    # Calculate angle changes
+    df['angle'] = np.arctan2(df['vy'], df['vx'])
+    df['angle_change'] = df['angle'].diff().abs()
+    df['angle_change'] = df['angle_change'].apply(lambda x: min(x, 2*np.pi - x))  # Handle circular nature of angles
+    
+    # Apply Savitzky-Golay filter to smooth the trajectory
+    df['x_smooth'] = savgol_filter(df['x'], window_size, 3)
+    df['y_smooth'] = savgol_filter(df['y'], window_size, 3)
+    df['z_smooth'] = savgol_filter(df['z'], window_size, 3)
+    
+    # Create a mask for realistic movements
+    realistic_mask = (
+        (df['velocity'] <= max_velocity) &
+        (df['acceleration'] <= max_acceleration) &
+        (df['angle_change'] <= max_angle_change)
+    )
+    
+    # Apply the mask and return the filtered DataFrame
+    df_filtered = df[realistic_mask].copy()
+    
+    # Update positions with smoothed values
+    df_filtered['x'] = df_filtered['x_smooth']
+    df_filtered['y'] = df_filtered['y_smooth']
+    df_filtered['z'] = df_filtered['z_smooth']
+    
+    # Drop temporary columns
+    columns_to_drop = ['dt', 'vx', 'vy', 'vz', 'velocity', 'ax', 'ay', 'az', 'acceleration', 'angle', 'angle_change', 'x_smooth', 'y_smooth', 'z_smooth']
+    df_filtered = df_filtered.drop(columns=columns_to_drop)
+    
+    return df_filtered
 
 def heading_direction_diff(
     pos: Union[np.ndarray, pd.DataFrame], origin: int = 50, end: int = 80, n: int = 1
