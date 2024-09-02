@@ -2,7 +2,7 @@ import numpy as np
 from scipy.signal import savgol_filter
 
 
-def _calculate_mean_and_std(arr: np.ndarray):
+def _calculate_mean_and_std(arr: np.ndarray, abs_value: bool = False):
     """
     Calculate the mean and standard deviation of an array.
 
@@ -12,7 +12,9 @@ def _calculate_mean_and_std(arr: np.ndarray):
     Returns:
         tuple: Mean and standard deviation of the array.
     """
-    return np.mean(arr, axis=0), np.std(arr, axis=0)
+    mean = np.nanmean(arr, axis=0) if not abs_value else np.nanmean(np.abs(arr), axis=0)
+    std = np.nanstd(arr, axis=0) if not abs_value else np.nanstd(np.abs(arr), axis=0)
+    return mean, std
 
 
 def sg_smooth(arr: np.array, **kwargs) -> np.array:

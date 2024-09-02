@@ -143,7 +143,7 @@ def get_turn_angle(
 
     return angles
 
-def extract_flying_sections(df, z_min=0.05, z_max=0.25, r_max=0.23, min_flight_duration=50):
+def extract_flying_sections(df, z_min=0.05, z_max=0.25, r_max=0.23, min_flight_duration=100):
     """
     Extracts sections of the trajectory where the fly is flying.
     
@@ -161,7 +161,7 @@ def extract_flying_sections(df, z_min=0.05, z_max=0.25, r_max=0.23, min_flight_d
     df['r'] = np.sqrt(df['x']**2 + df['y']**2)
     
     # Create a boolean mask for flying conditions
-    flying_mask = (df['z'] > z_min) & (df['z'] < z_max) & (df['r'] < r_max)
+    flying_mask = (df['z'] > z_min) & (df['z'] < z_max) & (df['r'] < r_max) & (df['x'] < r_max) & (df['y'] < r_max)
     
     # Find the start and end indices of flying sections
     flying_changes = flying_mask.astype(int).diff()
