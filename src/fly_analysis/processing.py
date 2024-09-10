@@ -36,40 +36,13 @@ def extract_stimulus_centered_data(
     data_dict = {}
     for col in columns:
         data_dict[col] = []
+    data_dict["timestamps"] = []
 
-    def get_segment_with_padding(
-        data: np.ndarray, before_overflow: int, after_overflow: int, is_2d: bool = False
-    ) -> np.ndarray:
-        """
-        Pads a segment of data with NaN values if it overflows the specified bounds.
-
-        Parameters:
-            data (numpy.ndarray): The data to be padded.
-            before_overflow (int): The number of frames that overflow before the start of the data.
-            after_overflow (int): The number of frames that overflow after the end of the data.
-            is_2d (bool, optional): Whether the data is 2D. Defaults to False.
-
-        Returns:
-            numpy.ndarray: The padded data.
-        """
-        if padding:
-            if is_2d:
-                return np.pad(
-                    data,
-                    ((before_overflow, after_overflow), (0, 0)),
-                    constant_values=np.nan,
-                )
-            else:
-                return np.pad(
-                    data, (before_overflow, after_overflow), constant_values=np.nan
-                )
-        return data
-
-    for idx, row in csv.iterrows():
+    for _, row in csv.iterrows():
         # extract identifier and frame number
         obj_id = int(row["obj_id"])
         frame = int(row["frame"])
-
+        
         # filter dataframe based on identifier
         grp = df[df.obj_id == obj_id]
 
@@ -82,7 +55,7 @@ def extract_stimulus_centered_data(
             stim_idx = np.where(grp.frame == frame)[0][0]
         except IndexError:
             continue
-
+        
         # set indices and check boundaries
         idx_before = stim_idx - n_before
         idx_after = stim_idx + n_after
@@ -110,5 +83,7 @@ def extract_stimulus_centered_data(
 
             else:
                 print(f"Column {col} not found")
+
+        data_dict["timestamps"].append(grp["timestamp"].iloc[stim_idx])
 
     return data_dict

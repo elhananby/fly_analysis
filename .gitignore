@@ -163,3 +163,5 @@ figures/
 *.joblib
 *.csv
 *.png
+*.pdf
+*.svg
