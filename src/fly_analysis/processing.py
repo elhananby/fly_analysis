@@ -3,8 +3,8 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from flyanalysis import trajectory
-
+from . import trajectory
+import logging
 
 def extract_stimulus_centered_data(
     df: pd.DataFrame,
@@ -33,37 +33,15 @@ def extract_stimulus_centered_data(
     Returns:
     Dict[str, List[Any]]: A dictionary containing the extracted data for each column.
     """
+    
+    def pad_dataframe(df, n, fill_value=np.nan):
+        pad_df = pd.DataFrame(np.nan, index=range(n), columns=df.columns)
+        df_padded = pd.concat([pad_df, df, pad_df], ignore_index=True)
+        return df_padded
+    
     data_dict = {}
     for col in columns:
         data_dict[col] = []
-
-    def get_segment_with_padding(
-        data: np.ndarray, before_overflow: int, after_overflow: int, is_2d: bool = False
-    ) -> np.ndarray:
-        """
-        Pads a segment of data with NaN values if it overflows the specified bounds.
-
-        Parameters:
-            data (numpy.ndarray): The data to be padded.
-            before_overflow (int): The number of frames that overflow before the start of the data.
-            after_overflow (int): The number of frames that overflow after the end of the data.
-            is_2d (bool, optional): Whether the data is 2D. Defaults to False.
-
-        Returns:
-            numpy.ndarray: The padded data.
-        """
-        if padding:
-            if is_2d:
-                return np.pad(
-                    data,
-                    ((before_overflow, after_overflow), (0, 0)),
-                    constant_values=np.nan,
-                )
-            else:
-                return np.pad(
-                    data, (before_overflow, after_overflow), constant_values=np.nan
-                )
-        return data
 
     for idx, row in csv.iterrows():
         # extract identifier and frame number
@@ -72,6 +50,10 @@ def extract_stimulus_centered_data(
 
         # filter dataframe based on identifier
         grp = df[df.obj_id == obj_id]
+        
+        # pad dataframe if necessary
+        if padding is not None:
+            grp = pad_dataframe(grp, padding)
 
         # skip if length is less than 150
         if len(grp) < 150:
@@ -88,6 +70,7 @@ def extract_stimulus_centered_data(
         idx_after = stim_idx + n_after
 
         if idx_before < 0 or idx_after >= len(grp):
+            logging.info(f"Skipping {obj_id}, {frame} - too short.")
             continue
 
         # Get data and apply padding if necessary
