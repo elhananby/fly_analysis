@@ -1,7 +1,6 @@
 name: flyanalysis-env
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - python
   - numpy
@@ -16,3 +15,9 @@ dependencies:
   - pip
   - pybind11
   - spatialmath-python
+  - seaborn
+  - statsmodels
+  - pip:
+    - pynumdiff
+    - cvxpy[CBC,CVXOPT,GLOP,GLPK,GUROBI,MOSEK,PDLP,SCIP,XPRESS]
+    - git+https://github.com/pychebfun/pychebfun.git

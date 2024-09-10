@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 
-from . import trajectory
+from .trajectory import get_angular_velocity, get_linear_velocity
 import logging
 
 def extract_stimulus_centered_data(
@@ -42,12 +42,13 @@ def extract_stimulus_centered_data(
     data_dict = {}
     for col in columns:
         data_dict[col] = []
+    data_dict["timestamps"] = []
 
-    for idx, row in csv.iterrows():
+    for _, row in csv.iterrows():
         # extract identifier and frame number
         obj_id = int(row["obj_id"])
         frame = int(row["frame"])
-
+        
         # filter dataframe based on identifier
         grp = df[df.obj_id == obj_id]
         
@@ -64,7 +65,7 @@ def extract_stimulus_centered_data(
             stim_idx = np.where(grp.frame == frame)[0][0]
         except IndexError:
             continue
-
+        
         # set indices and check boundaries
         idx_before = stim_idx - n_before
         idx_after = stim_idx + n_after
@@ -76,12 +77,12 @@ def extract_stimulus_centered_data(
         # Get data and apply padding if necessary
         for col in columns:
             if col == "angular_velocity":
-                angvel = trajectory.get_angular_velocity(grp, degrees=False)
+                angvel = get_angular_velocity(grp, degrees=False)
                 segment = angvel[idx_before:idx_after]
                 data_dict[col].append(segment)
 
             elif col == "linear_velocity":
-                linvel = trajectory.get_linear_velocity(grp)
+                linvel = get_linear_velocity(grp)
                 segment = linvel[idx_before:idx_after]
                 data_dict[col].append(segment)
 
@@ -93,5 +94,7 @@ def extract_stimulus_centered_data(
 
             else:
                 print(f"Column {col} not found")
+
+        data_dict["timestamps"].append(grp["timestamp"].iloc[stim_idx])
 
     return data_dict

@@ -27,7 +27,7 @@ def plot_trajectory(df: pd.DataFrame, ax: plt.Axes = None, **kwargs):
     return ax
 
 
-def plot_mean_and_std(arr: np.ndarray, ax: plt.Axes = None, **kwargs):
+def plot_mean_and_std(arr: np.ndarray, ax: plt.Axes = None, abs_value: bool = False, shaded_area: list = [None, None], **kwargs):
     """
     Plot the mean and standard deviation of an array.
 
@@ -41,10 +41,12 @@ def plot_mean_and_std(arr: np.ndarray, ax: plt.Axes = None, **kwargs):
     """
     if ax is None:
         fig, ax = plt.subplots()
-    mean, std = _calculate_mean_and_std(arr)
+    mean, std = _calculate_mean_and_std(arr, abs_value)
     X = np.arange(len(mean))
     ax.plot(X, mean, **kwargs)
     ax.fill_between(X, mean - std, mean + std, alpha=0.5)
+    if shaded_area[0] is not None and shaded_area[1] is not None:
+        ax.axvspan(shaded_area[0], shaded_area[1], alpha=0.2, color="gray")
     return ax
 
 

@@ -50,9 +50,9 @@ def filter_by_duration(df: pd.DataFrame, threshold: float = 5) -> List[int]:
 
 def filter_by_median_position(
     df: pd.DataFrame,
-    xlim: Tuple[float, float],
-    ylim: Tuple[float, float],
-    zlim: Tuple[float, float],
+    xlim: Tuple[float, float] = (-0.2, 0.2),
+    ylim: Tuple[float, float] = (-0.2, 0.2),
+    zlim: Tuple[float, float] = (0.1, 0.2),
 ) -> List[int]:
     """
     Filters a DataFrame based on the median position of each object.

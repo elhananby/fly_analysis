@@ -2,7 +2,7 @@ import numpy as np
 from scipy.signal import savgol_filter
 
 
-def _calculate_mean_and_std(arr: np.ndarray):
+def _calculate_mean_and_std(arr: np.ndarray, abs_value: bool = False):
     """
     Calculate the mean and standard deviation of an array.
 
@@ -12,7 +12,9 @@ def _calculate_mean_and_std(arr: np.ndarray):
     Returns:
         tuple: Mean and standard deviation of the array.
     """
-    return np.mean(arr, axis=0), np.std(arr, axis=0)
+    mean = np.nanmean(arr, axis=0) if not abs_value else np.nanmean(np.abs(arr), axis=0)
+    std = np.nanstd(arr, axis=0) if not abs_value else np.nanstd(np.abs(arr), axis=0)
+    return mean, std
 
 
 def sg_smooth(arr: np.array, **kwargs) -> np.array:
@@ -110,6 +112,37 @@ def circular_median(angles, degrees=False):
         # Ensure the result is in the range [0, 2π)
         return (median_angle + 2 * np.pi) % (2 * np.pi)
 
+
+def find_intersection(*lists: list) -> list:
+    """
+    Find the intersection of any number of lists.
+
+    Args:
+    *lists: Variable number of lists to find the intersection of.
+
+    Returns:
+    List[T]: A list containing elements that appear in all input lists.
+
+    Raises:
+    ValueError: If no lists are provided.
+
+    Example:
+    >>> find_intersection([1, 2, 3], [2, 3, 4], [3, 4, 5])
+    [3]
+    >>> find_intersection(['a', 'b', 'c'], ['b', 'c', 'd'], ['c', 'd', 'e'])
+    ['c']
+    """
+    if not lists:
+        raise ValueError("At least one list must be provided")
+
+    # Convert all lists to sets
+    set_list = [set(lst) for lst in lists]
+
+    # Use set intersection
+    intersection = set.intersection(*set_list)
+
+    # Convert back to list and return
+    return list(intersection)
 
 def angdiff(theta1, theta2):
     return ((theta2 - theta1) + np.pi) % (2 * np.pi) - np.pi

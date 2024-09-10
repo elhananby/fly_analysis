@@ -233,3 +233,23 @@ def read_braidz(
         raise FileNotFoundError(f"Path {filename} does not exist")
 
     return df, csvs
+
+
+def read_multiple_braidz(
+    files: list[str], root_folder: str):
+    """
+    Reads data from multiple .braidz files and combines them into one DataFrame.
+    Create a new column `unique_obj_id` with the index of the dataframe appended to the original `obj_id`.
+    """
+    dfs = []
+    stims = []
+
+    for i, filename in enumerate(files):
+        df, csvs = read_braidz(os.path.join(root_folder, filename))
+        df['unique_obj_id'] = f"{i}_" + df["obj_id"].astype(str)
+        stim = csvs['stim']
+        stim['unique_obj_id'] = f"{i}_" + stim['obj_id'].astype(str)
+        dfs.append(df)
+        stims.append(stim)
+
+    return pd.concat(dfs, ignore_index=True), pd.concat(stims, ignore_index=True)
