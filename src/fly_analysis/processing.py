@@ -35,7 +35,7 @@ def extract_stimulus_centered_data(
     """
     
     def pad_dataframe(df, n, fill_value=np.nan):
-        pad_df = pd.DataFrame(np.nan, index=range(n), columns=df.columns)
+        pad_df = pd.DataFrame(fill_value, index=range(n), columns=df.columns)
         df_padded = pd.concat([pad_df, df, pad_df], ignore_index=True)
         return df_padded
     
@@ -43,6 +43,7 @@ def extract_stimulus_centered_data(
     for col in columns:
         data_dict[col] = []
     data_dict["timestamps"] = []
+    data_dict["exp_num"] = []
 
     for _, row in csv.iterrows():
         # extract identifier and frame number
@@ -71,7 +72,7 @@ def extract_stimulus_centered_data(
         idx_after = stim_idx + n_after
 
         if idx_before < 0 or idx_after >= len(grp):
-            logging.info(f"Skipping {obj_id}, {frame} - too short.")
+            logging.info(f"Skipping {obj_id} - too short. ({idx_before}, {idx_after}, {len(grp)})")
             continue
 
         # Get data and apply padding if necessary
@@ -96,5 +97,14 @@ def extract_stimulus_centered_data(
                 print(f"Column {col} not found")
 
         data_dict["timestamps"].append(grp["timestamp"].iloc[stim_idx])
+        
+        if "exp_num" in row:
+            data_dict["exp_num"].append(row["exp_num"])
+        else:
+            data_dict["exp_num"].append(None)
 
+    # convert all key-items to numpy arrays
+    for k, v in data_dict.items():
+        data_dict[k] = np.array(v)
+        
     return data_dict

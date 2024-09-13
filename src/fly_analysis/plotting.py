@@ -44,7 +44,7 @@ def plot_mean_and_std(arr: np.ndarray, ax: plt.Axes = None, abs_value: bool = Fa
     mean, std = _calculate_mean_and_std(arr, abs_value)
     X = np.arange(len(mean))
     ax.plot(X, mean, **kwargs)
-    ax.fill_between(X, mean - std, mean + std, alpha=0.5)
+    ax.fill_between(X, mean - std, mean + std, alpha=0.5, **kwargs)
     if shaded_area[0] is not None and shaded_area[1] is not None:
         ax.axvspan(shaded_area[0], shaded_area[1], alpha=0.2, color="gray")
     return ax

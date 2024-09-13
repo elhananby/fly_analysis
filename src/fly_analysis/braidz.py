@@ -8,6 +8,7 @@ import gzip
 import pandas as pd
 from tqdm import tqdm
 from typing import Dict, Tuple, Optional, Literal
+import logging
 
 
 def read_csv_pyarrow(file_obj) -> Optional[pd.DataFrame]:
@@ -235,21 +236,47 @@ def read_braidz(
     return df, csvs
 
 
-def read_multiple_braidz(
-    files: list[str], root_folder: str):
+def read_multiple_braidz(files: list[str], root_folder: str):
     """
     Reads data from multiple .braidz files and combines them into one DataFrame.
     Create a new column `unique_obj_id` with the index of the dataframe appended to the original `obj_id`.
     """
     dfs = []
     stims = []
+    optos = []
 
     for i, filename in enumerate(files):
-        df, csvs = read_braidz(os.path.join(root_folder, filename))
-        df['unique_obj_id'] = f"{i}_" + df["obj_id"].astype(str)
-        stim = csvs['stim']
-        stim['unique_obj_id'] = f"{i}_" + stim['obj_id'].astype(str)
-        dfs.append(df)
-        stims.append(stim)
 
-    return pd.concat(dfs, ignore_index=True), pd.concat(stims, ignore_index=True)
+        # read entire file
+        df, csvs = read_braidz(os.path.join(root_folder, filename))
+
+        # update dfs
+        df["exp_num"] = i
+        df["unique_obj_id"] = f"{i}_" + df["obj_id"].astype(str)
+
+        dfs.append(df)
+
+        # update stims
+        if "stim" in csvs:
+            stim = csvs["stim"]
+            stim["unique_obj_id"] = f"{i}_" + stim["obj_id"].astype(str)
+            stim["exp_num"] = i
+            stims.append(stim)
+
+        # update optos
+        if "opto" in csvs:
+            opto = csvs["opto"]
+            opto["unique_obj_id"] = f"{i}_" + opto["obj_id"].astype(str)
+            opto["exp_num"] = i
+            optos.append(opto)
+
+    # combine all dataframes, if they exist
+    if len(dfs) > 0:
+        dfs = pd.concat(dfs, ignore_index=True)
+
+    if len(stims) > 0:
+        stims = pd.concat(stims, ignore_index=True)
+    if len(optos) > 0:
+        optos = pd.concat(optos, ignore_index=True)
+
+    return dfs, stims, optos

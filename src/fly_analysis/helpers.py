@@ -55,28 +55,21 @@ def process_sequences(arr: np.ndarray, func):
     return new_arr
 
 
-def unwrap_with_nan(arr, placeholder=0):
+def unwrap_ignore_nan(arr):
     """
-    Replaces NaN values in the input array with a specified placeholder value, unwraps the array using np.unwrap(),
-    and then replaces the placeholder values with NaN again.
+    Unwrap an array of angles, ignoring NaN values.
 
     Parameters:
-        arr (np.ndarray): The input array.
-        placeholder (int, optional): The value to replace NaN values with. Defaults to 0.
+        arr (array-like): An array of angles.
 
     Returns:
-        np.ndarray: The unwrapped array with NaN values replaced by the placeholder value.
+        array-like: The unwrapped array of angles.
+
+    This function uses the `np.unwrap` function to unwrap the input array of angles, but ignores NaN values. This is useful for unwrapping arrays that contain NaN values, which would otherwise cause `np.unwrap` to raise an error.
     """
-    # Replace NaN values with a placeholder
-    arr_no_nan = np.where(np.isnan(arr), placeholder, arr)
-
-    # Perform the unwrap
-    unwrapped_arr = np.unwrap(arr_no_nan)
-
-    # Replace the placeholder values with NaN again
-    unwrapped_arr = np.where(unwrapped_arr == placeholder, np.nan, unwrapped_arr)
-
-    return unwrapped_arr
+    
+    arr[~np.isnan(arr)] = np.unwrap(arr[~np.isnan(arr)])
+    return arr
 
 
 def circular_median(angles, degrees=False):

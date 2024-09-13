@@ -4,8 +4,9 @@ import pandas as pd
 # from pybind11_rdp import rdp
 from typing import Union
 from scipy.signal import find_peaks
-from .helpers import sg_smooth, circular_median, angdiff
+from .helpers import sg_smooth, circular_median, angdiff, unwrap_ignore_nan
 from scipy.signal import savgol_filter
+from pynumdiff.smooth_finite_difference import butterdiff
 
 def time(df: pd.DataFrame) -> float:
     """
@@ -42,7 +43,7 @@ def distance(df: pd.DataFrame, axes: str = "xyz") -> float:
 
 
 def get_angular_velocity(
-    df: pd.DataFrame, dt: float = 0.01, degrees: bool = True
+    df: pd.DataFrame, dt: float = 0.01, degrees: bool = True, smooth: bool = True,
 ) -> np.ndarray:
     """
     Calculate the angular velocity of the trajectory.
@@ -55,11 +56,16 @@ def get_angular_velocity(
     Returns:
         np.ndarray: Angular velocity of the trajectory.
     """
-    thetas = np.arctan2(df.yvel.values, df.xvel.values)
-    thetas_u = np.unwrap(thetas)
-    angular_velocity = np.gradient(thetas_u, dt)
-    return np.rad2deg(angular_velocity) if degrees else angular_velocity
 
+
+    thetas = np.arctan2(df.yvel.values, df.xvel.values)
+    thetas_u = unwrap_ignore_nan(thetas)
+    if smooth:
+        angular_velocity = np.copy(thetas_u)
+        _, angular_velocity[~np.isnan(angular_velocity)] = butterdiff(angular_velocity[~np.isnan(angular_velocity)], dt, [1, 0.1])
+    else:
+        angular_velocity = np.gradient(thetas_u, dt)
+    return np.rad2deg(angular_velocity) if degrees else angular_velocity
 
 def get_linear_velocity(
     df: pd.DataFrame, dt: float = 0.01, axes: str = "xy"

@@ -21,3 +21,4 @@ dependencies:
     - pynumdiff
     - cvxpy[CBC,CVXOPT,GLOP,GLPK,GUROBI,MOSEK,PDLP,SCIP,XPRESS]
     - git+https://github.com/pychebfun/pychebfun.git
+    - git+https://github.com/circstat/pycircstat2.git

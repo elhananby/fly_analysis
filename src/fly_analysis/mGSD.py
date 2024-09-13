@@ -1,116 +1,104 @@
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
+from typing import List, Tuple
 
-def mGSD(df, delta=5, threshold=0.001):
-    """
-    Modified Geometric Saccade Detection Algorithm (Stupski and van Breugel, 2024)
+class MGSDAlgorithm:
+    def __init__(self, delta: int = 5, threshold: float = 0.001):
+        self.delta = delta
+        self.threshold = threshold
 
-    Parameters:
-    df (pd.DataFrame): Input trajectory DataFrame.
-    delta (int): Time step in frames (default 5).
-    threshold (float): Threshold for saccade detection (default 0.001).
+    def detect_saccades(self, trajectory: List[Tuple[float, float]]) -> List[int]:
+        n = len(trajectory)
+        scores = []
 
-    Returns:
-    tuple: A tuple containing the results DataFrame and a list of saccade event frames.
+        for k in range(self.delta, n - self.delta):
+            score = self._calculate_mgsd_score(trajectory, k)
+            scores.append(score)
 
-    The results DataFrame has the following columns:
-    - 'frame': The frame index.
-    - 'score': The modified geometric saccade detection score.
+        return self._find_saccade_events(scores)
 
-    The saccade event frames are the frames where there is a saccade, determined by the threshold.
-    """
-
-    def calculate_angle(x, y):
-        return np.arctan2(y, x)
-
-    def calculate_distance(x, y):
-        return np.sqrt(x**2 + y**2)
-
-    results = []
-    n = len(df)
-
-    for k in range(delta, n - delta):
-        # Redefine origin
-        x_center, y_center = df.iloc[k]["x"], df.iloc[k]["y"]
-        x = df["x"] - x_center
-        y = df["y"] - y_center
-
-        # Calculate angles for before and after intervals
-        before_angles = calculate_angle(x[k - delta : k], y[k - delta : k])
-        after_angles = calculate_angle(
-            x[k + 1 : k + delta + 1], y[k + 1 : k + delta + 1]
-        )
-
-        # Calculate amplitude score
+    def _calculate_mgsd_score(self, trajectory: List[Tuple[float, float]], k: int) -> float:
+        # Step 2: Redefine origin
+        origin = trajectory[k]
+        
+        # Step 3: Define before and after intervals
+        before_interval = trajectory[k - self.delta : k]
+        after_interval = trajectory[k + 1 : k + self.delta + 1]
+        
+        # Step 4 & 5: Calculate angles and median angles
+        before_angles = [self._calculate_angle(p, origin) for p in before_interval]
+        after_angles = [self._calculate_angle(p, origin) for p in after_interval]
         theta_before = np.median(before_angles)
         theta_after = np.median(after_angles)
-        A = abs(theta_after - theta_before)
-
-        # Calculate dispersion score
-        distances = calculate_distance(
-            x[k - delta : k + delta + 1], y[k - delta : k + delta + 1]
-        )
+        
+        # Calculate amplitude score
+        A = np.abs(theta_after - theta_before)
+        
+        # Step 6: Calculate dispersion score
+        full_interval = trajectory[k - self.delta : k + self.delta + 1]
+        distances = [self._euclidean_distance(p, origin) for p in full_interval]
         D = np.std(distances)
+        
+        # Step 7: Calculate mGSD score
+        return A * D
 
-        # Calculate mGSD score
-        S = A * D
-
-        results.append({"frame": k, "score": S})
-
-    results_df = pd.DataFrame(results)
-
-    # Detect saccade events
-    saccade_events = []
-    in_saccade = False
-    saccade_start = 0
-    below_threshold_count = 0
-
-    for i, row in results_df.iterrows():
-        if row["score"] > threshold:
-            if not in_saccade:
+    def _find_saccade_events(self, scores: List[float]) -> List[int]:
+        saccade_events = []
+        in_saccade = False
+        start_frame = 0
+        
+        for i, score in enumerate(scores):
+            if score > self.threshold and not in_saccade:
                 in_saccade = True
-                saccade_start = i
-            below_threshold_count = 0
-        else:
-            if in_saccade:
-                below_threshold_count += 1
-                if below_threshold_count > 5:
-                    saccade_events.append(
-                        int(results_df.loc[saccade_start:i, "frame"].median())
-                    )
-                    in_saccade = False
+                start_frame = i
+            elif score <= self.threshold and in_saccade:
+                if i - start_frame > 5:
+                    saccade_events.append(start_frame + self.delta + (i - start_frame) // 2)
+                in_saccade = False
 
-    if in_saccade:
-        saccade_events.append(int(results_df.loc[saccade_start:, "frame"].median()))
+        return saccade_events
 
-    return results_df, saccade_events
+    @staticmethod
+    def _calculate_angle(point: Tuple[float, float], origin: Tuple[float, float]) -> float:
+        return np.arctan2(point[1] - origin[1], point[0] - origin[0])
 
-def plot_trajectory_with_saccades(df, saccade_events, output_file=None):
+    @staticmethod
+    def _euclidean_distance(p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
+        return np.sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+
+# Example usage and visualization
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+
+    # Generate a sample trajectory with more pronounced saccades
+    np.random.seed(42)
+    t = np.linspace(0, 10, 1000)
+    x = np.cumsum(np.where(np.random.rand(1000) > 0.98, np.random.normal(0, 1), np.random.normal(0, 0.1)))
+    y = np.cumsum(np.where(np.random.rand(1000) > 0.98, np.random.normal(0, 1), np.random.normal(0, 0.1)))
+    trajectory = list(zip(x, y))
+
+    # Create MGSD algorithm instance
+    mgsd = MGSDAlgorithm(delta=5, threshold=0.005)  # Adjusted threshold for demonstration
+
+    # Detect saccades
+    saccade_events = mgsd.detect_saccades(trajectory)
+
+    print(f"Detected {len(saccade_events)} saccade events at frames: {saccade_events}")
+
+    # Plotting
     plt.figure(figsize=(12, 8))
-    
-    # Plot the full trajectory
-    plt.plot(df['x'], df['y'], 'b-', alpha=0.5, label='Trajectory')
-    
-    # Mark the start and end points
-    plt.plot(df['x'].iloc[0], df['y'].iloc[0], 'go', markersize=10, label='Start')
-    plt.plot(df['x'].iloc[-1], df['y'].iloc[-1], 'ro', markersize=10, label='End')
-    
-    # Mark saccade events
-    for event in saccade_events:
-        plt.plot(df['x'].iloc[event], df['y'].iloc[event], 'y*', markersize=15, label='Saccade')
-    
-    # Remove duplicate labels
-    handles, labels = plt.gca().get_legend_handles_labels()
-    by_label = dict(zip(labels, handles))
-    plt.legend(by_label.values(), by_label.keys())
-    
-    plt.title('Fly Trajectory with Detected Saccades')
-    plt.xlabel('X Position')
-    plt.ylabel('Y Position')
-    plt.grid(True, linestyle='--', alpha=0.7)
-    
-    if output_file:
-        plt.savefig(output_file, dpi=300, bbox_inches='tight')
-    else:
-        plt.show()
+    plt.plot(x, y, 'b-', alpha=0.5)
+    plt.plot([x[i] for i in saccade_events], [y[i] for i in saccade_events], 'ro', markersize=8)
+    plt.title('Trajectory with Detected Saccades')
+    plt.xlabel('X position')
+    plt.ylabel('Y position')
+    plt.show()
+
+    # Plot mGSD scores
+    scores = [mgsd._calculate_mgsd_score(trajectory, k) for k in range(mgsd.delta, len(trajectory) - mgsd.delta)]
+    plt.figure(figsize=(12, 4))
+    plt.plot(range(mgsd.delta, len(trajectory) - mgsd.delta), scores)
+    plt.axhline(y=mgsd.threshold, color='r', linestyle='--')
+    plt.title('mGSD Scores')
+    plt.xlabel('Frame')
+    plt.ylabel('mGSD Score')
+    plt.show()
