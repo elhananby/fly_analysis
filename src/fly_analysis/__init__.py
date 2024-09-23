@@ -5,6 +5,6 @@ from . import plotting
 from . import processing
 from . import trajectory
 from . import video
-from . import mGSD
+from . import file_group_manager
 
-__all__ = ['braidz', 'filtering', 'helpers', 'plotting', 'processing', 'trajectory', 'video', 'mGSD']
+__all__ = ['braidz', 'filtering', 'helpers', 'plotting', 'processing', 'trajectory', 'video', 'file_group_manager']

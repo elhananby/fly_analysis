@@ -236,19 +236,26 @@ def read_braidz(
     return df, csvs
 
 
-def read_multiple_braidz(files: list[str], root_folder: str):
+def read_multiple_braidz(files: list | str, root_folder: str | None = None) -> dict:
     """
     Reads data from multiple .braidz files and combines them into one DataFrame.
     Create a new column `unique_obj_id` with the index of the dataframe appended to the original `obj_id`.
     """
+
+    if not isinstance(files, list):
+        files = [files]
+
     dfs = []
     stims = []
     optos = []
 
     for i, filename in enumerate(files):
 
+        if root_folder is not None:
+            filename = os.path.join(root_folder, filename)
+
         # read entire file
-        df, csvs = read_braidz(os.path.join(root_folder, filename))
+        df, csvs = read_braidz(filename)
 
         # update dfs
         df["exp_num"] = i
@@ -279,4 +286,5 @@ def read_multiple_braidz(files: list[str], root_folder: str):
     if len(optos) > 0:
         optos = pd.concat(optos, ignore_index=True)
 
-    return dfs, stims, optos
+    data = {"df": dfs, "stim": stims, "opto": optos}
+    return data
