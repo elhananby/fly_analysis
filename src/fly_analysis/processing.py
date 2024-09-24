@@ -130,9 +130,9 @@ def extract_stimulus_centered_data(
 
         if is_valid:
             if "sham" in row:
-                if row["sham"] == True:
+                if row["sham"]:
                     stimulus_type = "sham"
-                elif row["sham"] == False or row["sham"] == np.nan:
+                elif not row["sham"] or row["sham"] == np.nan:
                     stimulus_type = "real"
             else:
                 stimulus_type = "real"
