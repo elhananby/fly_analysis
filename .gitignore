@@ -165,3 +165,4 @@ figures/
 *.png
 *.pdf
 *.svg
+*.parquet
