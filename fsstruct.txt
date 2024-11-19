@@ -1,0 +1,56 @@
+.
+├── dist
+│   ├── fly_analysis-0.1.0-py3-none-any.whl
+│   └── fly_analysis-0.1.0.tar.gz
+├── environment.yaml
+├── fsstruct.txt
+├── hello.py
+├── notebooks
+│   ├── BlurryVideoBraidPosition.ipynb
+│   ├── BuchsbaumSchnell2024.ipynb
+│   ├── HighSpeedVideos.ipynb
+│   ├── J53_Kir_Analysis.ipynb
+│   ├── looming_saccades_over_time.ipynb
+│   ├── MultiBraidAnalysis.ipynb
+│   ├── OptoAnalysis.ipynb
+│   ├── random_analysis.ipynb
+│   ├── stim2braidz.csv
+│   ├── stim2braidz.ipynb
+│   ├── Stim_vs_Spont_Saccades.ipynb
+│   ├── TurnDirectionOpto.ipynb
+│   ├── VideoAnalysis.ipynb
+│   └── WildTypeAnalysis.ipynb
+├── pyproject.toml
+├── README.md
+├── scripts
+│   ├── get_individual_data.ipynb
+│   ├── get_laser_heading.py
+│   ├── laser_movements.csv
+│   ├── lens.py
+│   ├── liquid_lens_calibration.py
+│   ├── sleap_analysis.ipynb
+│   ├── stepper_motor
+│   │   └── stepper_motor.ino
+│   ├── test_msg.py
+│   └── video_with_keypoints.py
+├── src
+│   ├── fly_analysis
+│   │   ├── braidz.py
+│   │   ├── file_group_manager.py
+│   │   ├── filtering.py
+│   │   ├── helpers.py
+│   │   ├── __init__.py
+│   │   ├── plotting.py
+│   │   ├── processing.py
+│   │   ├── trajectory.py
+│   │   ├── TREBLE.py
+│   │   └── video.py
+│   └── fly_analysis.egg-info
+│       ├── dependency_links.txt
+│       ├── PKG-INFO
+│       ├── requires.txt
+│       ├── SOURCES.txt
+│       └── top_level.txt
+└── uv.lock
+
+8 directories, 46 files
