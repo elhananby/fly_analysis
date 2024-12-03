@@ -13,6 +13,7 @@ dependencies = [
     "natsort>=8.4.0",
     "notebook>=7.0.7",
     "numpy>=2.0.2",
+    "opencv-contrib-python>=4.10.0.84",
     "opencv-python>=4.10.0.84",
     "pandas>=2.2.3",
     "pyarrow>=18.1.0",
