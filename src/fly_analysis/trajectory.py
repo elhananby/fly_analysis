@@ -353,3 +353,54 @@ def mGSD(trajectory, delta=5, threshold=0.001):
             in_saccade = False
 
     return saccades
+
+import math
+
+def angdiff(angle1, angle2, units='deg'):
+    """
+    Calculate the signed angular difference between two angles.
+    Returns the shortest angular distance in the specified units.
+    
+    Args:
+        angle1 (float): First angle
+        angle2 (float): Second angle
+        units (str): Unit of measurement - 'deg' for degrees or 'rad' for radians
+        
+    Returns:
+        float: Signed angular difference in the same units as input
+    
+    Raises:
+        ValueError: If units parameter is neither 'deg' nor 'rad'
+    """
+    if units not in ['deg', 'rad']:
+        raise ValueError("Units must be 'deg' or 'rad'")
+    
+    # Convert to degrees for internal calculations if needed
+    if units == 'rad':
+        angle1 = math.degrees(angle1)
+        angle2 = math.degrees(angle2)
+    
+    # Normalize angles to [-180, 180] range
+    def normalize_angle(angle):
+        angle = angle % 360
+        if angle > 180:
+            angle -= 360
+        return angle
+    
+    angle1 = normalize_angle(angle1)
+    angle2 = normalize_angle(angle2)
+    
+    # Calculate difference
+    diff = angle2 - angle1
+    
+    # Ensure the result is in [-180, 180]
+    if diff > 180:
+        diff -= 360
+    elif diff < -180:
+        diff += 360
+    
+    # Convert back to radians if needed
+    if units == 'rad':
+        diff = math.radians(diff)
+        
+    return diff
