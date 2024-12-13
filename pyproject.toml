@@ -1,6 +1,6 @@
 [project]
 name = "fly-analysis"
-version = "0.1.0"
+version = "0.1.1"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">3.9,<=3.10"
@@ -12,7 +12,7 @@ dependencies = [
     "matplotlib>=3.9.3",
     "natsort>=8.4.0",
     "notebook>=7.0.7",
-    "numpy>=2.0.2",
+    "numpy<=2.0",
     "opencv-contrib-python>=4.10.0.84",
     "opencv-python>=4.10.0.84",
     "pandas>=2.2.3",
@@ -22,6 +22,7 @@ dependencies = [
     "scikit-learn>=1.5.2",
     "scipy>=1.13.1",
     "seaborn>=0.13.2",
+    "statsmodels>=0.14.4",
     "tqdm>=4.67.1",
 ]
 

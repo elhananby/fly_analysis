@@ -291,10 +291,9 @@ def smooth_columns(
     pd.DataFrame: Smoothed dataframe.
     """
     df_copy = df.copy()
-    arrs = df[columns].to_numpy()
-    smoothed_arrs = np.apply_along_axis(sg_smooth, 0, arrs, **kwargs)
-    df_copy[columns + "_raw"] = df[columns]
-    df_copy[columns] = smoothed_arrs
+    for col in columns:
+        df_copy[f"{col}_raw"] = df_copy[col]
+        df_copy[col] = sg_smooth(df_copy[col], **kwargs)
 
     return df_copy
 
